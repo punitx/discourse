@@ -14,7 +14,7 @@ echo "=== Starting Discourse environment setup ==="
 # ── Start pre-installed services ──
 echo "Starting PostgreSQL..."
 sudo service postgresql start
-sudo -u postgres createuser --superuser "$USER" 2>/dev/null || true
+sudo -u postgres createuser --superuser "$(whoami)" 2>/dev/null || true
 
 echo "Starting Redis..."
 sudo service redis-server start 2>/dev/null || redis-server --daemonize yes 2>/dev/null || true
@@ -45,10 +45,15 @@ if [ -n "$CLAUDE_ENV_FILE" ]; then
   echo "RBENV_VERSION=3.4.2" >> "$CLAUDE_ENV_FILE"
 fi
 
-# ── Install gem dependencies ──
-echo "Installing bundler and gems..."
-gem install bundler --no-document
-bundle install --jobs "$(nproc)" --retry 3
+# ── Install correct bundler version and gems ──
+# Bundler 4.0.7 (shipped with Ruby 3.4.2) has a proxy compatibility bug
+# (@@accept_charset in CGI). Use the locked version 2.6.4 instead.
+echo "Installing bundler 2.6.4..."
+gem install bundler -v 2.6.4 --no-document
+
+echo "Installing gems..."
+bundle _2.6.4_ config set --local silence_root_warning true
+bundle _2.6.4_ install --jobs "$(nproc)" --retry 3
 
 # ── Install frontend dependencies ──
 echo "Installing frontend dependencies..."
@@ -56,13 +61,13 @@ pnpm install
 
 # ── Setup test database ──
 echo "Setting up test database..."
-RAILS_ENV=test bundle exec rake db:create db:migrate 2>/dev/null || \
-  RAILS_ENV=test bundle exec rake db:migrate
+RAILS_ENV=test bundle _2.6.4_ exec rake db:create db:migrate 2>/dev/null || \
+  RAILS_ENV=test bundle _2.6.4_ exec rake db:migrate
 
 echo ""
 echo "=== Setup complete ==="
 echo "Ruby: $(ruby --version)"
-echo "Bundler: $(bundle --version)"
+echo "Bundler: $(bundle _2.6.4_ --version)"
 echo "Node: $(node --version)"
 echo "PostgreSQL: $(pg_isready 2>&1)"
 echo "Redis: $(redis-cli ping 2>&1)"
