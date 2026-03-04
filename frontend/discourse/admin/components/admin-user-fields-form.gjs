@@ -38,6 +38,7 @@ export default class AdminUserFieldsForm extends Component {
       "description",
       "requirement",
       "editable",
+      "editable_once",
       "show_on_profile",
       "show_on_signup",
       "show_on_user_card",
@@ -68,6 +69,16 @@ export default class AdminUserFieldsForm extends Component {
 
     if (value === false) {
       set("show_on_signup", true);
+      set("editable_once", false);
+    }
+  }
+
+  @action
+  setEditableOnce(value, { set }) {
+    set("editable_once", value);
+
+    if (value === true) {
+      set("editable", true);
     }
   }
 
@@ -237,6 +248,16 @@ export default class AdminUserFieldsForm extends Component {
             @showTitle={{false}}
             @onSet={{this.setEditable}}
             @title={{i18n "admin.user_fields.editable.title"}}
+            as |field|
+          >
+            <field.Checkbox disabled={{this.editableDisabled}} />
+          </group.Field>
+          <group.Field
+            @name="editable_once"
+            @showTitle={{false}}
+            @onSet={{this.setEditableOnce}}
+            @title={{i18n "admin.user_fields.editable_once.title"}}
+            @description={{i18n "admin.user_fields.editable_once.description"}}
             as |field|
           >
             <field.Checkbox disabled={{this.editableDisabled}} />

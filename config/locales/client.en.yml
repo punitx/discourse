@@ -1548,6 +1548,7 @@ en:
       required_checkbox: 'The field "%{name}" is required'
       same_as_password: "Your password should not be repeated in other fields"
       optional: (optional)
+      locked: "This field can only be set once and cannot be changed."
 
     user:
       said: "%{username}:"
@@ -8585,6 +8586,11 @@ en:
           title: "Editable after signup"
           enabled: "Editable"
           disabled: "Not editable"
+        editable_once:
+          title: "Editable once"
+          description: "Users can fill in this field once. After providing a value, it becomes read-only. Staff can always edit it."
+          enabled: "Editable once"
+          disabled: "Not editable once"
         show_on_profile:
           title: "Show on public profile"
           enabled: "Shown on profile"

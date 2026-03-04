@@ -225,6 +225,12 @@ class UsersController < ApplicationController
              )
           return render_json_error(I18n.t("login.missing_user_field"))
         end
+
+        if field.editable_once? && !current_user.staff?
+          existing_value = user.custom_fields["#{User::USER_FIELD_PREFIX}#{field_id}"]
+          next if existing_value.present?
+        end
+
         attributes[:custom_fields]["#{User::USER_FIELD_PREFIX}#{field.id}"] = value
       end
     end
