@@ -76,10 +76,12 @@ bundle _2.6.4_ install --jobs "$(nproc)" --retry 3
 echo "[6/7] Installing frontend dependencies..."
 pnpm install
 
-# ── Setup test database ──
-echo "[7/7] Setting up test database..."
-RAILS_ENV=test bundle _2.6.4_ exec rake db:create db:migrate 2>/dev/null || \
-  RAILS_ENV=test bundle _2.6.4_ exec rake db:migrate
+# ── Setup test database (non-fatal — agent can fix migration issues) ──
+echo "[7/7] Setting up test database (non-fatal)..."
+set +e
+RAILS_ENV=test bundle _2.6.4_ exec rake db:create 2>/dev/null
+RAILS_ENV=test bundle _2.6.4_ exec rake db:migrate 2>/dev/null
+set -e
 
 # ── Mark complete ──
 touch "$DONE_MARKER"
