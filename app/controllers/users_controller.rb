@@ -208,7 +208,7 @@ class UsersController < ApplicationController
       attributes[:custom_fields] ||= {}
 
       fields = UserField.all
-      fields = fields.where(editable: true) unless current_user.staff?
+      fields = fields.where("editable = true OR editable_once = true") unless current_user.staff?
       fields.each do |field|
         field_id = field.id.to_s
         next unless params[:user_fields].has_key?(field_id)
@@ -216,6 +216,13 @@ class UsersController < ApplicationController
         value = clean_custom_field_values(field)
         value = nil if value === "false"
         value = value[0...UserField.max_length] if value
+        field_key = "#{User::USER_FIELD_PREFIX}#{field_id}"
+        existing_value = user.custom_fields[field_key]
+
+        if field.editable_once? && !current_user.staff? && existing_value.present? &&
+             value != existing_value
+          next
+        end
 
         if value.blank? &&
              (
@@ -225,7 +232,7 @@ class UsersController < ApplicationController
              )
           return render_json_error(I18n.t("login.missing_user_field"))
         end
-        attributes[:custom_fields]["#{User::USER_FIELD_PREFIX}#{field.id}"] = value
+        attributes[:custom_fields][field_key] = value
       end
     end
 

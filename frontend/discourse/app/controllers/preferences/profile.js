@@ -47,7 +47,10 @@ export default class ProfileController extends Controller {
     );
   }
 
-  @computed("model.user_fields.@each.value")
+  @computed(
+    "model.user_fields.@each.value",
+    "model.editable_once_locked_user_fields"
+  )
   get userFields() {
     let siteUserFields = this.site.user_fields;
     if (isEmpty(siteUserFields)) {
@@ -63,14 +66,20 @@ export default class ProfileController extends Controller {
 
     // Staff can edit fields that are not `editable`
     if (!this.currentUser.staff) {
-      siteUserFields = siteUserFields.filter((field) => field.editable);
+      siteUserFields = siteUserFields.filter(
+        (field) => field.editable || field.editable_once
+      );
     }
 
+    const lockedUserFields = this.model.editable_once_locked_user_fields || {};
     return siteUserFields
       .sort((a, b) => compare(a?.position, b?.position))
       .map((field) => {
         const value = this.model.user_fields?.[field.id.toString()];
-        return EmberObject.create({ field, value });
+        const locked =
+          !this.currentUser.staff && lockedUserFields[field.id.toString()];
+
+        return EmberObject.create({ field, value, locked: Boolean(locked) });
       });
   }
 
@@ -101,7 +110,7 @@ export default class ProfileController extends Controller {
         (siteField) =>
           siteField.requirement === "for_all_users" && !userFields[siteField.id]
       )
-      .map((field) => EmberObject.create({ field, value: "" }));
+      .map((field) => EmberObject.create({ field, value: "", locked: false }));
   }
 
   @action
@@ -134,6 +143,10 @@ export default class ProfileController extends Controller {
       const modelFields = model.get("user_fields");
       if (!isEmpty(modelFields)) {
         userFields.forEach(function (uf) {
+          if (uf.get("locked")) {
+            return;
+          }
+
           const value = uf.get("value");
           modelFields[uf.get("field.id").toString()] = isEmpty(value)
             ? null

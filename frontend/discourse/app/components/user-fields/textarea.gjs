@@ -13,6 +13,7 @@ export default class UserFieldTextArea extends UserFieldBase {
         @value={{this.value}}
         class="form-template-field__textarea"
         maxlength={{this.site.user_field_max_length}}
+        disabled={{this.disabled}}
       />
       <label
         class="control-label alt-placeholder"

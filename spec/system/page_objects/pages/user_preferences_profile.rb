@@ -28,6 +28,15 @@ module PageObjects
         find(".save-button .btn-primary").click
       end
 
+      def fill_custom_text_field(field_css_class, with:)
+        find(".#{field_css_class} input").fill_in(with:)
+        self
+      end
+
+      def has_custom_text_field_disabled?(field_css_class)
+        has_css?(".#{field_css_class} input[disabled]")
+      end
+
       def cooked_bio
         find(".user-main .details .primary .bio")
       end

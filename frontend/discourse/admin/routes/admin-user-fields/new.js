@@ -5,6 +5,7 @@ import { i18n } from "discourse-i18n";
 const DEFAULT_VALUES = {
   field_type: "text",
   requirement: "optional",
+  editable_once: false,
   show_on_signup: true,
 };
 
