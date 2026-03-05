@@ -2751,6 +2751,86 @@ RSpec.describe UsersController do
             end
           end
 
+          context "with an editable once field" do
+            fab!(:user_field) do
+              Fabricate(:user_field, requirement: "optional", editable: true, editable_once: true)
+            end
+
+            it "allows users to set a value when blank" do
+              put "/u/#{user.username}.json",
+                  params: {
+                    user_fields: {
+                      user_field.id.to_s => "first value",
+                    },
+                  }
+
+              expect(response.status).to eq(200)
+              expect(user.reload.user_fields[user_field.id.to_s]).to eq("first value")
+            end
+
+            it "does not allow users to change the value after it is set" do
+              user.set_user_field(user_field.id, "first value")
+              user.save_custom_fields
+
+              put "/u/#{user.username}.json",
+                  params: {
+                    user_fields: {
+                      user_field.id.to_s => "second value",
+                    },
+                  }
+
+              expect(response.status).to eq(200)
+              expect(user.reload.user_fields[user_field.id.to_s]).to eq("first value")
+            end
+
+            it "allows staff to change a locked value" do
+              user.set_user_field(user_field.id, "first value")
+              user.save_custom_fields
+              sign_in(admin)
+
+              put "/u/#{user.username}.json",
+                  params: {
+                    user_fields: {
+                      user_field.id.to_s => "second value",
+                    },
+                  }
+
+              expect(response.status).to eq(200)
+              expect(user.reload.user_fields[user_field.id.to_s]).to eq("second value")
+            end
+
+            it "allows users to fill the field again after staff clears it" do
+              user.set_user_field(user_field.id, "first value")
+              user.save_custom_fields
+              sign_in(admin)
+
+              put "/u/#{user.username}.json", params: { user_fields: { user_field.id.to_s => nil } }
+
+              expect(response.status).to eq(200)
+              expect(user.reload.user_fields[user_field.id.to_s]).to be_nil
+
+              sign_in(user)
+              put "/u/#{user.username}.json",
+                  params: {
+                    user_fields: {
+                      user_field.id.to_s => "second value",
+                    },
+                  }
+
+              expect(response.status).to eq(200)
+              expect(user.reload.user_fields[user_field.id.to_s]).to eq("second value")
+            end
+
+            it "still enforces for_all_users fields for existing users" do
+              user_field.update!(requirement: :for_all_users)
+
+              put "/u/#{user.username}.json", params: { user_fields: { user_field.id.to_s => "" } }
+
+              expect(response.status).to eq(422)
+              expect(response.parsed_body["errors"]).to include(I18n.t("login.missing_user_field"))
+            end
+          end
+
           context "with user_notification_schedule attributes" do
             it "updates the user's notification schedule" do
               params = {

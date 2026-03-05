@@ -25,6 +25,24 @@ RSpec.describe Admin::UserFieldsController do
         }.to change(UserField, :count).by(1)
       end
 
+      it "creates a user field with editable_once" do
+        post "/admin/config/user_fields.json",
+             params: {
+               user_field: {
+                 name: "hello",
+                 description: "hello desc",
+                 field_type: "text",
+                 requirement: "for_all_users",
+                 editable: true,
+                 editable_once: true,
+               },
+             }
+
+        expect(response.status).to eq(200)
+        expect(UserField.last).to have_attributes(editable: true, editable_once: true)
+        expect(response.parsed_body["user_field"]["editable_once"]).to eq(true)
+      end
+
       it "creates a user text field" do
         expect {
           post "/admin/config/user_fields.json",
@@ -198,6 +216,7 @@ RSpec.describe Admin::UserFieldsController do
                 description: "muppet",
                 requirement: "optional",
                 show_on_signup: false,
+                editable_once: true,
               },
             }
 
@@ -207,6 +226,7 @@ RSpec.describe Admin::UserFieldsController do
           field_type: "confirm",
           required?: false,
           show_on_signup?: false,
+          editable_once?: true,
         )
       end
 

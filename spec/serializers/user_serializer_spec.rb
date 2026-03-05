@@ -442,6 +442,20 @@ RSpec.describe UserSerializer do
       )
       expect(self_json[:user_fields].keys).to contain_exactly(*fields.map { |f| f.id.to_s })
     end
+
+    it "includes editable once lock state for fields already filled by the user" do
+      editable_once_field = Fabricate(:user_field, editable_once: true, editable: true)
+      user.set_user_field(editable_once_field.id, "locked value")
+
+      self_json = UserSerializer.new(user, scope: Guardian.new(user), root: false).as_json
+      other_user_json =
+        UserSerializer.new(user, scope: Guardian.new(Fabricate(:user)), root: false).as_json
+
+      expect(self_json[:editable_once_locked_user_fields]).to eq(
+        { editable_once_field.id.to_s => true },
+      )
+      expect(other_user_json[:editable_once_locked_user_fields]).to be_nil
+    end
   end
 
   context "with user_api_keys" do

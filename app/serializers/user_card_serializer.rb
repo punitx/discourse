@@ -66,6 +66,7 @@ class UserCardSerializer < BasicUserSerializer
              :silenced_till,
              :badge_count,
              :user_fields,
+             :editable_once_locked_user_fields,
              :custom_fields,
              :topic_post_count,
              :time_read,
@@ -175,6 +176,23 @@ class UserCardSerializer < BasicUserSerializer
 
   def include_user_fields?
     user_fields.present?
+  end
+
+  def editable_once_locked_user_fields
+    allowed_field_ids = scope.allowed_user_field_ids(object)
+    return {} if allowed_field_ids.blank?
+
+    UserField
+      .where(id: allowed_field_ids, editable_once: true)
+      .pluck(:id)
+      .each_with_object({}) do |field_id, locked_fields|
+        value = object.custom_fields["#{User::USER_FIELD_PREFIX}#{field_id}"]
+        locked_fields[field_id.to_s] = true if value.present?
+      end
+  end
+
+  def include_editable_once_locked_user_fields?
+    scope.can_edit?(object) && editable_once_locked_user_fields.present?
   end
 
   def custom_fields

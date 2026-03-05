@@ -8585,6 +8585,11 @@ en:
           title: "Editable after signup"
           enabled: "Editable"
           disabled: "Not editable"
+        editable_once:
+          title: "Editable once"
+          description: "Users can edit this field until they provide a value. After that, it becomes read-only for them, but staff can still edit it."
+          enabled: "Editable once"
+          disabled: "Always editable"
         show_on_profile:
           title: "Show on public profile"
           enabled: "Shown on profile"

@@ -12,6 +12,7 @@ export default class UserFieldText extends UserFieldBase {
         id={{concat "user-" this.elementId}}
         @value={{this.value}}
         maxlength={{this.site.user_field_max_length}}
+        disabled={{this.disabled}}
       />
       <label
         class="control-label alt-placeholder"

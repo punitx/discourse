@@ -32,12 +32,13 @@ export default class AdminUserFieldsForm extends Component {
 
   @cached
   get formData() {
-    return this.args.userField.getProperties(
+    const formData = this.args.userField.getProperties(
       "field_type",
       "name",
       "description",
       "requirement",
       "editable",
+      "editable_once",
       "show_on_profile",
       "show_on_signup",
       "show_on_user_card",
@@ -45,6 +46,11 @@ export default class AdminUserFieldsForm extends Component {
       "options",
       ...this.adminCustomUserFields.additionalProperties
     );
+
+    formData.editable = Boolean(formData.editable);
+    formData.editable_once = Boolean(formData.editable_once);
+
+    return formData;
   }
 
   @action
@@ -68,6 +74,15 @@ export default class AdminUserFieldsForm extends Component {
 
     if (value === false) {
       set("show_on_signup", true);
+    }
+  }
+
+  @action
+  setEditableOnce(value, { set }) {
+    set("editable_once", value);
+
+    if (value) {
+      set("editable", true);
     }
   }
 
@@ -239,7 +254,21 @@ export default class AdminUserFieldsForm extends Component {
             @title={{i18n "admin.user_fields.editable.title"}}
             as |field|
           >
-            <field.Checkbox disabled={{this.editableDisabled}} />
+            <field.Checkbox
+              disabled={{or this.editableDisabled transientData.editable_once}}
+            />
+          </group.Field>
+          <group.Field
+            @name="editable_once"
+            @showTitle={{false}}
+            @onSet={{this.setEditableOnce}}
+            @title={{i18n "admin.user_fields.editable_once.title"}}
+            as |field|
+          >
+            <field.Checkbox />
+            <div class="form-kit__description">
+              {{i18n "admin.user_fields.editable_once.description"}}
+            </div>
           </group.Field>
           <group.Field
             @name="show_on_profile"
