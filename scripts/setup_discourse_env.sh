@@ -31,15 +31,15 @@ fi
 echo "=== Starting Discourse environment setup ==="
 
 # ── Start pre-installed services ──
-echo "[1/7] Starting PostgreSQL..."
+echo "[1/6] Starting PostgreSQL..."
 sudo service postgresql start
 sudo -u postgres createuser --superuser "$(whoami)" 2>/dev/null || true
 
-echo "[2/7] Starting Redis..."
+echo "[2/6] Starting Redis..."
 sudo service redis-server start 2>/dev/null || redis-server --daemonize yes 2>/dev/null || true
 
 # ── Ruby 3.4 via rbenv ──
-echo "[3/7] Installing Ruby 3.4..."
+echo "[3/6] Installing Ruby 3.4..."
 export PATH="$HOME/.rbenv/bin:$HOME/.rbenv/shims:/opt/rbenv/bin:/opt/rbenv/shims:$PATH"
 eval "$(rbenv init - 2>/dev/null)" || true
 
@@ -65,25 +65,18 @@ if [ -n "$CLAUDE_ENV_FILE" ]; then
 fi
 
 # ── Install correct bundler version and gems ──
-echo "[4/7] Installing bundler 2.6.4..."
+echo "[4/6] Installing bundler 2.6.4..."
 gem install bundler -v 2.6.4 --no-document
 
-echo "[5/7] Installing gems (this takes several minutes)..."
+echo "[5/6] Installing gems (this takes several minutes)..."
 bundle _2.6.4_ config set --local silence_root_warning true
 bundle _2.6.4_ install --jobs "$(nproc)" --retry 3
 
 # ── Install frontend dependencies ──
-echo "[6/7] Installing frontend dependencies..."
+echo "[6/6] Installing frontend dependencies..."
 pnpm install
 
-# ── Setup test database (non-fatal — agent can fix migration issues) ──
-echo "[7/7] Setting up test database (non-fatal)..."
-set +e
-RAILS_ENV=test bundle _2.6.4_ exec rake db:create 2>/dev/null
-RAILS_ENV=test bundle _2.6.4_ exec rake db:migrate 2>/dev/null
-set -e
-
-# ── Mark complete ──
+# ── Mark complete (agent handles db:create/db:migrate when running tests) ──
 touch "$DONE_MARKER"
 
 echo ""
