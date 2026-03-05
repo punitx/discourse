@@ -118,3 +118,27 @@ ALWAYS lint any changes you make
 - Follow project conventions, prevent knowledge silos
 - Recommend storage locations by info type
 - Inform when this file changes and reloads
+
+## Cursor Cloud specific instructions
+
+### Services overview
+Discourse requires three services: **PostgreSQL** (primary database), **Redis** (caching/jobs), and the **Rails + Ember CLI** dev servers.
+
+### Starting services
+Before running tests or the dev server, ensure PostgreSQL and Redis are running:
+```bash
+sudo pg_ctlcluster 16 main start
+redis-server --daemonize yes
+```
+
+### Running the dev server
+`bin/ember-cli server --environment=development` starts the Ember CLI on port 4200 (proxies to Rails on 3000). Start Rails separately with `bin/rails server`. Alternatively, `bin/dev` starts both together.
+
+### QUnit (JavaScript) tests
+`bin/qunit` requires a running Rails server on port 3000, or use `--standalone` to auto-start one. Example: `bin/qunit --standalone frontend/discourse/tests/unit/lib/text-test.js`.
+
+### Gotchas
+- The `discourse-ai` plugin requires the **pgvector** PostgreSQL extension (>=0.7.0). The Ubuntu 24.04 package only provides 0.6.0; pgvector must be built from source (v0.8.0+). It is pre-installed in the snapshot.
+- Ubuntu ships ImageMagick 6 which lacks the `magick` CLI. A symlink `magick -> convert` at `/usr/local/bin/magick` is pre-installed in the snapshot to satisfy `lib/letter_avatar.rb`.
+- The test database `discourse_test_multisite` must also exist for `RAILS_ENV=test rake db:migrate` to succeed.
+- Standard commands for lint/test/build are documented in the Commands section above and in `package.json` scripts.
